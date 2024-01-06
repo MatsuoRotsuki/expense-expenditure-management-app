@@ -4,20 +4,19 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.Firebase
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.database
 import com.hedspi.expensemanagement.databinding.ActivityMainBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.Locale
+import java.util.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private lateinit var deletedTransaction : Transaction
@@ -25,7 +24,6 @@ class MainActivity : AppCompatActivity() {
     private  lateinit var oldTransactions: List<Transaction>
     private lateinit var  transactionAdapter: TransactionAdapter
     private  lateinit var  linearLayoutManager: LinearLayoutManager
-    private lateinit var firebaseDatabase: DatabaseReference
     private lateinit var db: AppDatabase
     private lateinit var binding: ActivityMainBinding
 
@@ -35,8 +33,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
-        firebaseDatabase = Firebase.database.reference
 
         transactions = arrayListOf()
         transactionAdapter = TransactionAdapter(transactions)
@@ -82,10 +78,6 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch {
             transactions = db.transactionDao().getAll()
 
-            for (transaction in transactions) {
-                firebaseDatabase.child("transactions").child(transaction.id.toString()).setValue(transaction)
-            }
-
             runOnUiThread {
                 updateDashboard()
                 transactionAdapter.setData(transactions)
@@ -108,9 +100,9 @@ class MainActivity : AppCompatActivity() {
         val budget = binding.budget
         val expense = binding.expense
 
-        balance.text = "${"%,.0f".format(Locale.US, totalAmount)}đ"
-        budget.text = "${"%,.0f".format(Locale.US, budgetAmount)}đ"
-        expense.text = "${"%,.0f".format(Locale.US, expenseAmount)}đ"
+        balance.text = "$totalAmount vnd"
+        budget.text = "$budgetAmount vnd"
+        expense.text = "$expenseAmount vnd"
     }
 
     private fun undoDelete() {
