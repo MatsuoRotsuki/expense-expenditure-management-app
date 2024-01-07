@@ -7,12 +7,17 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.databinding.adapters.NumberPickerBindingAdapter.setValue
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.integrity.internal.t
+import com.google.firebase.Firebase
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.database
 import com.hedspi.expensemanagement.databinding.ActivityMainBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -24,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private  lateinit var oldTransactions: List<Transaction>
     private lateinit var  transactionAdapter: TransactionAdapter
     private  lateinit var  linearLayoutManager: LinearLayoutManager
+    private lateinit var firebaseDatabase: DatabaseReference
     private lateinit var db: AppDatabase
     private lateinit var binding: ActivityMainBinding
 
@@ -33,6 +39,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        firebaseDatabase = Firebase.database.reference
 
         transactions = arrayListOf()
         transactionAdapter = TransactionAdapter(transactions)
@@ -77,6 +85,10 @@ class MainActivity : AppCompatActivity() {
     private fun fetchAll() {
         GlobalScope.launch {
             transactions = db.transactionDao().getAll()
+
+            for (transaction in transactions) {
+                firebaseDatabase.child("transactions").child(transaction.id.toString()).setValue(transaction)
+            }
 
             runOnUiThread {
                 updateDashboard()
