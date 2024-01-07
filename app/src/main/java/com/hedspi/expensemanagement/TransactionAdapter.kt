@@ -1,5 +1,6 @@
 package com.hedspi.expensemanagement
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 
-class TransactionAdapter(private val transactions: ArrayList<Transaction>) :
+class TransactionAdapter(private var transactions: List<Transaction>) :
     RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
 
     class TransactionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -34,9 +35,20 @@ class TransactionAdapter(private val transactions: ArrayList<Transaction>) :
         }
 
         holder.label.text = transaction.label
+
+        holder.itemView.setOnClickListener{
+            val intent = Intent(context, DetailedActivity::class.java)
+            intent.putExtra("transaction", transaction)
+            context.startActivity(intent)
+        }
     }
 
     override fun getItemCount(): Int {
         return transactions.size
+    }
+
+    fun setData(transactions: List<Transaction>) {
+        this.transactions = transactions
+        notifyDataSetChanged()
     }
 }
