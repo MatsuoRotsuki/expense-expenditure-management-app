@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.annotation:annotation:1.6.0")
     val room_version = "2.6.1"
     val lifecycle_version = "2.6.2"
     val nav_version = "2.7.6"
@@ -91,6 +92,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-auth")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

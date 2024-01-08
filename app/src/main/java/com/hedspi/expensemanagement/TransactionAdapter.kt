@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 import kotlin.math.abs
 
 class TransactionAdapter(private var transactions: List<Transaction>) :
@@ -27,10 +28,10 @@ class TransactionAdapter(private var transactions: List<Transaction>) :
         val context = holder.amount.context
 
         if (transaction.amount >= 0) {
-            holder.amount.text = "+ $%.2f".format(transaction.amount)
+            holder.amount.text = "+ %,.0fVND".format(Locale.US, transaction.amount)
             holder.amount.setTextColor(ContextCompat.getColor(context, R.color.green))
         } else {
-            holder.amount.text = "- $%.2f".format(abs(transaction.amount))
+            holder.amount.text = "- %,.0fVND".format(Locale.US, abs(transaction.amount))
             holder.amount.setTextColor(ContextCompat.getColor(context, R.color.red))
         }
 

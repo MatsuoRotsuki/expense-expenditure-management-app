@@ -16,6 +16,9 @@ import com.google.android.material.textfield.TextInputLayout
 import com.hedspi.expensemanagement.databinding.ActivityDetailedBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
+import java.util.Locale
+import kotlin.math.abs
 
 class DetailedActivity : AppCompatActivity() {
     private lateinit var transaction : Transaction
@@ -39,7 +42,7 @@ class DetailedActivity : AppCompatActivity() {
 
         if (transaction != null) {
             labelInput.setText(transaction.label)
-            amountInput.setText(transaction.amount.toString())
+            amountInput.setText(DecimalFormat("0.##########").format(transaction.amount))
             descriptionInput.setText(transaction.description)
         }
 
