@@ -44,6 +44,7 @@ android {
 
 dependencies {
     implementation("androidx.annotation:annotation:1.6.0")
+    implementation("com.google.firebase:firebase-auth-ktx:22.3.0")
     val room_version = "2.6.1"
     val lifecycle_version = "2.6.2"
     val nav_version = "2.7.6"
