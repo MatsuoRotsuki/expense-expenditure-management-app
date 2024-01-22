@@ -16,6 +16,8 @@ class ProfileActivity : AppCompatActivity() {
 
         val bottomNavigationView = binding.bottomNavView
 
+        bottomNavigationView.selectedItemId = com.hedspi.expensemanagement.R.id.item_profile
+
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.item_home -> {
