@@ -17,6 +17,7 @@ import com.hedspi.expensemanagement.databinding.ActivityHomeBinding
 import com.hedspi.expensemanagement.databinding.ActivityMainBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var deletedTransaction : Transaction
@@ -57,28 +58,13 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        val migration_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Perform migration steps here (e.g., CREATE TABLE, ALTER TABLE)
-                database.execSQL("CREATE TABLE IF NOT EXISTS new_transactions (id INTEGER PRIMARY KEY NOT NULL," +
-                        "label TEXT NOT NULL," +
-                        "amount REAL NOT NULL, " +
-                        "description TEXT, " +
-                        "transactionDate TEXT NOT NULL)");
 
-                // Migrate data from old_transactions to new_transactions
-                database.execSQL("INSERT INTO new_transactions (label, amount, description, transactionDate) SELECT label, amount, description, transactionDate FROM transactions");
-                // Drop the old table
-                database.execSQL("DROP TABLE IF EXISTS transactions");
-
-                // Rename the new table to the original table name
-                database.execSQL("ALTER TABLE new_transactions RENAME TO transactions");
-            }
-        }
 
         db = Room.databaseBuilder(this,
             AppDatabase::class.java,
             "transactions")
+            .addMigrations(migration_1_2)
+            .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
             .build()
 
@@ -140,9 +126,9 @@ class HomeActivity : AppCompatActivity() {
         val budget = binding.budget
         val expense = binding.expense
 
-        balance.text = "$totalAmount vnd"
-        budget.text = "$budgetAmount vnd"
-        expense.text = "$expenseAmount vnd"
+        balance.text = "${"%,.0f".format(Locale.US, totalAmount)} VND"
+        budget.text = "${"%,.0f".format(Locale.US, budgetAmount)} VND"
+        expense.text = "${"%,.0f".format(Locale.US, expenseAmount)} VND"
     }
 
     private fun undoDelete() {

@@ -21,15 +21,21 @@ class StaticActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+
+
+
         val bottomNavigationView = binding.bottomNavView
+        bottomNavigationView.selectedItemId = com.hedspi.expensemanagement.R.id.item_static
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
+
             when (menuItem.itemId) {
                 com.hedspi.expensemanagement.R.id.item_home -> {
                     startActivity(Intent(this, HomeActivity::class.java))
                     true
                 }
                 com.hedspi.expensemanagement.R.id.item_static -> {
+                    menuItem.setChecked(true)
                     startActivity(Intent(this, StaticActivity::class.java))
                     true
                 }

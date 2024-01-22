@@ -70,47 +70,15 @@ class WeekFragment : Fragment() {
         val convertInput = binding.convertInput
 
 
-        if (convertInput.text!!.equals("")) {
-            val calendar = Calendar.getInstance()
-            year = calendar.get(Calendar.YEAR)
-            weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
-            val (startDate, endDate) = getStartAndEndOfWeek(year!!, weekOfYear!!)
-            val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
-            val outputFormat = SimpleDateFormat("yyyy-MM-dd")
-
-            val startParsedDate = inputFormat.parse(startDate.toString())
-            val endParsedDate = inputFormat.parse(endDate.toString())
-            val startDateFor = outputFormat.format(startParsedDate)
-            val endDateFor = outputFormat.format(endParsedDate)
-            dateInput.setText("$startDateFor - $endDateFor")
-        }
-
         dateInput.setOnClickListener {
             showWeekPickerDialog()
-        }
-
-        val migration_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Perform migration steps here (e.g., CREATE TABLE, ALTER TABLE)
-                database.execSQL("CREATE TABLE IF NOT EXISTS new_transactions (id INTEGER PRIMARY KEY NOT NULL," +
-                        "label TEXT NOT NULL," +
-                        "amount REAL NOT NULL, " +
-                        "description TEXT, " +
-                        "transactionDate TEXT NOT NULL)");
-
-                // Migrate data from old_transactions to new_transactions
-                database.execSQL("INSERT INTO new_transactions (label, amount, description, transactionDate) SELECT label, amount, description, transactionDate FROM transactions");
-                // Drop the old table
-                database.execSQL("DROP TABLE IF EXISTS transactions");
-
-                // Rename the new table to the original table name
-                database.execSQL("ALTER TABLE new_transactions RENAME TO transactions");
-            }
         }
 
         db = Room.databaseBuilder(requireContext(),
             AppDatabase::class.java,
             "transactions")
+            .addMigrations(migration_1_2)
+            .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
             .build()
 
@@ -135,7 +103,7 @@ class WeekFragment : Fragment() {
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, year, month, dayOfMonth ->
-                val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
+                val weekOfYear = getWeekOfYear(year, month, dayOfMonth)
                 val (startDate, endDate) = getStartAndEndOfWeek(year, weekOfYear)
                 val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
                 val outputFormat = SimpleDateFormat("yyyy-MM-dd")
@@ -211,6 +179,12 @@ class WeekFragment : Fragment() {
         } else {
             fetchAll("$year", "$weekOfYear")
         }
+    }
+
+    fun getWeekOfYear(year: Int, month: Int, dayOfMonth: Int): Int {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month, dayOfMonth) // Months are 0-indexed
+        return calendar.get(Calendar.WEEK_OF_YEAR)
     }
 
     companion object {
