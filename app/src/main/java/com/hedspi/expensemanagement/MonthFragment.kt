@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.google.firebase.auth.FirebaseAuth
 import com.hedspi.expensemanagement.databinding.FragmentMonthBinding
 import com.hedspi.expensemanagement.databinding.FragmentWeekBinding
 import kotlinx.coroutines.GlobalScope
@@ -40,6 +41,8 @@ class MonthFragment : Fragment() {
     private lateinit var db: AppDatabase
     private var year : Int? = 0
     private var month : Int? = 0
+    private val auth = FirebaseAuth.getInstance()
+    private val userId = auth.currentUser?.uid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +87,7 @@ class MonthFragment : Fragment() {
             .addMigrations(migration_1_2)
             .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
+            .addMigrations(migration_4_5)
             .build()
 
         if (year != null && month != null) {
@@ -125,7 +129,7 @@ class MonthFragment : Fragment() {
     private fun fetchAll(year: String, month: String) {
         Log.d("app", "Handle fetch")
         GlobalScope.launch {
-            transactions = db.transactionDao().getTransByMonth(year, month)
+            transactions = db.transactionDao().getTransByMonth(year, month, userId!!)
             Log.d("app", "$year/$month")
 
             if (transactions.isNotEmpty()) {

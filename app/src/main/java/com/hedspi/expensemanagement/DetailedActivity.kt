@@ -17,6 +17,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.hedspi.expensemanagement.databinding.ActivityDetailedBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -38,10 +40,13 @@ class DetailedActivity : AppCompatActivity() {
         val amountInput = binding.amountInput
         val labelLayout = binding.labelLayout
         val amountLayout = binding.amountLayout
+        val dateLayout = binding.dateLayout
         val descriptionInput = binding.descriptionInput
         val updateTransactionBtn = binding.updateTransactionBtn
         val dateInput = binding.dateInput
         val rootView = binding.rootView
+        val auth = FirebaseAuth.getInstance()
+        val userId = auth.currentUser?.uid
 
         dateInput.setOnClickListener {
             showDatePickerDialog()
@@ -100,10 +105,11 @@ class DetailedActivity : AppCompatActivity() {
                 amountLayout.error = "Please enter a valid amount"
 
             else if (date.isEmpty())
-                amountLayout.error = "Please enter a valid date"
+                dateLayout.error = "Please enter a valid date"
 
             else {
-                val transaction = Transaction(transaction.id, label, amount, description, localDate)
+                val transaction = Transaction(transaction.id, label, amount, description, localDate, userId!!,transaction.code)
+                transaction.setCode()
                 update(transaction)
             }
 
@@ -147,12 +153,27 @@ class DetailedActivity : AppCompatActivity() {
 
     private fun update(transaction: Transaction) {
 
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val transRef = firebaseDatabase.getReference("transactions")
+
+        val tranMap = hashMapOf(
+            "amount" to transaction.amount,
+            "description" to transaction.description,
+            "code" to transaction.code,
+            "label" to transaction.label,
+            "transactionDate" to transaction.transactionDate,
+            "userId" to transaction.userId
+        )
+
+        transRef.child(transaction.id.toString()).setValue(tranMap)
+
         val db = Room.databaseBuilder(this,
             AppDatabase::class.java,
             "transactions")
             .addMigrations(migration_1_2)
             .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
+            .addMigrations(migration_4_5)
             .build()
         GlobalScope.launch {
             db.transactionDao().update(transaction)

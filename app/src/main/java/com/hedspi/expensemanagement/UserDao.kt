@@ -21,5 +21,8 @@ interface UserDao {
     fun update(vararg user: User)
 
     @Query("SELECT * FROM users WHERE id = :userId")
-    suspend fun getUserById(userId: Long): User
+    fun getUserById(userId: Long): User
+
+    @Query("SELECT COUNT(*) FROM users WHERE username = :username")
+    fun checkUsernameExists(username: String): Int
 }
