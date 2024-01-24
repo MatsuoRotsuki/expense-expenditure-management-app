@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.google.firebase.auth.FirebaseAuth
 import com.hedspi.expensemanagement.databinding.FragmentWeekBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -41,6 +42,8 @@ class WeekFragment : Fragment() {
     private lateinit var db: AppDatabase
     private var year : Int? = 0
     private var weekOfYear : Int? = 0
+    private val auth = FirebaseAuth.getInstance()
+    private val userId = auth.currentUser?.uid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +83,7 @@ class WeekFragment : Fragment() {
             .addMigrations(migration_1_2)
             .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
+            .addMigrations(migration_4_5)
             .build()
 
         if (year != null && weekOfYear != null) {
@@ -147,7 +151,7 @@ class WeekFragment : Fragment() {
     private fun fetchAll(year: String, weekOfYear: String) {
         Log.d("app", "Handle fetch")
         GlobalScope.launch {
-            transactions = db.transactionDao().getTransByWeek(year, weekOfYear)
+            transactions = db.transactionDao().getTransByWeek(year, weekOfYear, userId!!)
             Log.d("app", "$year - $weekOfYear")
             activity?.runOnUiThread {
                 updateDashboard()

@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.icu.util.Calendar
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.core.widget.addTextChangedListener
@@ -12,6 +13,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.hedspi.expensemanagement.databinding.ActivityAddTransactionBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -20,6 +23,8 @@ import java.time.format.DateTimeFormatter
 
 class AddTransactionActivity : AppCompatActivity() {
     private  lateinit var binding: ActivityAddTransactionBinding
+    private val auth = FirebaseAuth.getInstance()
+    private val userId = auth.currentUser?.uid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +42,7 @@ class AddTransactionActivity : AppCompatActivity() {
         dateInput.setOnClickListener {
             showDatePickerDialog()
         }
+        Log.d("app", userId!!)
 
         labelInput.addTextChangedListener {
             if (it!!.isNotEmpty())
@@ -65,7 +71,8 @@ class AddTransactionActivity : AppCompatActivity() {
                 amountLayout.error = "Please enter a valid amount"
 
             else {
-                val transaction = Transaction(0, label, amount, description, localDate)
+                val transaction = Transaction(0, label, amount, description, localDate, userId!!, "")
+                transaction.setCode()
                 insert(transaction)
             }
 
@@ -108,34 +115,31 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun insert(transaction: Transaction) {
-        val migration_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Perform migration steps here (e.g., CREATE TABLE, ALTER TABLE)
-                database.execSQL("CREATE TABLE IF NOT EXISTS new_transactions (id INTEGER PRIMARY KEY NOT NULL," +
-                        "label TEXT NOT NULL," +
-                        "amount REAL NOT NULL, " +
-                        "description TEXT, " +
-                        "transactionDate TEXT NOT NULL)");
-
-                // Migrate data from old_transactions to new_transactions
-                database.execSQL("INSERT INTO new_transactions (label, amount, description, transactionDate) SELECT label, amount, description, transactionDate FROM transactions");
-
-                // Drop the old table
-                database.execSQL("DROP TABLE IF EXISTS transactions");
-
-                // Rename the new table to the original table name
-                database.execSQL("ALTER TABLE new_transactions RENAME TO transactions");
-            }
-        }
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val transRef = firebaseDatabase.getReference("transactions")
 
         val db = Room.databaseBuilder(this,
             AppDatabase::class.java,
             "transactions")
+            .addMigrations(migration_1_2)
+            .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
+            .addMigrations(migration_4_5)
             .build()
 
         GlobalScope.launch {
             db.transactionDao().insertAll(transaction)
+            val newTran = db.transactionDao().getTranWithLargestId()
+            val tranMap = hashMapOf(
+                "amount" to transaction.amount,
+                "description" to transaction.description,
+                "code" to transaction.code,
+                "label" to transaction.label,
+                "transactionDate" to transaction.transactionDate,
+                "userId" to transaction.userId
+            )
+
+            transRef.child(newTran[0].id.toString()).setValue(tranMap)
             finish()
         }
     }

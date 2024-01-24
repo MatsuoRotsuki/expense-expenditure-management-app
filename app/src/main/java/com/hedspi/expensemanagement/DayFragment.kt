@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.google.firebase.auth.FirebaseAuth
 import com.hedspi.expensemanagement.databinding.FragmentDayBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ class DayFragment : Fragment() {
     private  lateinit var  linearLayoutManager: LinearLayoutManager
     private lateinit var db: AppDatabase
     private  lateinit var transDate : String
+    private val auth = FirebaseAuth.getInstance()
+    private val userId = auth.currentUser?.uid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +79,7 @@ class DayFragment : Fragment() {
             .addMigrations(migration_1_2)
             .addMigrations(migration_2_3)
             .addMigrations(migration_3_4)
+            .addMigrations(migration_4_5)
             .build()
 
 
@@ -123,7 +127,7 @@ class DayFragment : Fragment() {
 
     private fun fetchAll(date : String) {
         GlobalScope.launch {
-            transactions = db.transactionDao().getTransByDate(date)
+            transactions = db.transactionDao().getTransByDate(date, userId!!)
             Log.d("app", date)
 
             if (transactions.isNotEmpty()) {
