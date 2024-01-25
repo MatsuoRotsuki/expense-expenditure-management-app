@@ -21,7 +21,10 @@ interface UserDao {
     fun update(vararg user: User)
 
     @Query("SELECT * FROM users WHERE id = :userId")
-    fun getUserById(userId: Long): User
+    fun getUserById(userId: String): User
+
+    @Query("SELECT SUM(amount) FROM transactions WHERE userId = :userId")
+    fun getMoneyByUserId(userId: String): Double
 
     @Query("SELECT COUNT(*) FROM users WHERE username = :username")
     fun checkUsernameExists(username: String): Int

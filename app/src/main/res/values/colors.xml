@@ -7,4 +7,8 @@
     <color name="green">#4CAF50</color>
     <color name="red">#F44336</color>
     <color name="yellow">#FFEB3B</color>
+    <color name="primaryDark">#292b3d</color>
+    <color name="graylight">#FAFAFA</color>
+    <color name="startblue">#09C6DF</color>
+    <color name="endblue">#0BCCE6</color>
 </resources>

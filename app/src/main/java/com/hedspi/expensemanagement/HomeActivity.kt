@@ -37,10 +37,9 @@ class HomeActivity : AppCompatActivity() {
     private  lateinit var  linearLayoutManager: LinearLayoutManager
     private lateinit var db: AppDatabase
     private lateinit var binding: ActivityHomeBinding
-    lateinit var syncRunnable: Runnable
     private val auth = FirebaseAuth.getInstance()
     private val userId = auth.currentUser?.uid
-    private val handler = Handler(Looper.getMainLooper())
+    private val activity = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +64,10 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.item_profile -> {
-                    startActivity(Intent(this, ProfileActivity::class.java))
+                    GlobalScope.launch {
+                        val intent = Intent(activity, ProfileActivity::class.java)
+                        startActivity(intent)
+                    }
                     true
                 }
 
@@ -83,19 +85,6 @@ class HomeActivity : AppCompatActivity() {
             .addMigrations(migration_3_4)
             .addMigrations(migration_4_5)
             .build()
-
-        @OptIn(DelicateCoroutinesApi::class)
-        syncRunnable = Runnable {
-            // Đồng bộ dữ liệu
-            GlobalScope.launch {
-                syncUsers()
-                syncTrans()
-            }
-
-            // Đặt lại lặp lại
-            handler.postDelayed(syncRunnable , 2 * 60 * 1000) // 2 phút
-            return@Runnable
-        }
 
         val recyclerView = binding.recyclerview
         recyclerView.adapter = transactionAdapter
@@ -132,8 +121,10 @@ class HomeActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        // Bắt đầu lặp lại
-        handler.post(syncRunnable)
+        GlobalScope.launch {
+            syncUsers()
+            syncTrans()
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -171,6 +162,12 @@ class HomeActivity : AppCompatActivity() {
     private fun undoDelete() {
         GlobalScope.launch {
             db.transactionDao().insertAll(deletedTransaction)
+            val databaseReference = FirebaseDatabase.getInstance().getReference("transactions/${deletedTransaction.id}")
+            databaseReference.setValue(deletedTransaction).addOnSuccessListener {
+
+            }.addOnFailureListener {
+
+            }
 
             transactions = oldTransactions
 
@@ -198,6 +195,13 @@ class HomeActivity : AppCompatActivity() {
 
         GlobalScope.launch {
             db.transactionDao().delete(transaction)
+
+            val databaseReference = FirebaseDatabase.getInstance().getReference("transactions/${transaction.id}")
+            databaseReference.removeValue().addOnSuccessListener {
+
+            }.addOnFailureListener {
+
+            }
 
             transactions = transactions.filter {it.id != transaction.id}
             runOnUiThread {
@@ -246,7 +250,7 @@ class HomeActivity : AppCompatActivity() {
             val serverTransactionDate = serverAttr[3]
 
             if (tranFromLocal != null ) {
-                // Bản ghi cục bộ đã bị thay đổi
+                // Bản ghi server đã bị thay đổi
                 if (codeServer != tranFromLocal.code) {
                     val localAttr = tranFromLocal.code.split(",")
                     var localLabel = localAttr[0]

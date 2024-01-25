@@ -35,8 +35,11 @@ class SignInActivity : AppCompatActivity() {
             if (email.isNotEmpty() && pass.isNotEmpty()) {
                 auth.signInWithEmailAndPassword(email, pass).addOnCompleteListener {
                     if (it.isSuccessful) {
+                        Toast.makeText(this, "You have signed in sucessfully", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this, HomeActivity::class.java)
                         startActivity(intent)
+                    } else {
+                        Toast.makeText(this, "Error adding data: ${it.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
